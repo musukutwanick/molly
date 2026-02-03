@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Just One Thing…</title>
+
+<!-- IMPORTANT for iPhone -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<style>
+  :root {
+    --pink: #ff5fa2;
+    --soft-pink: #ffd6e8;
+    --black: #000;
+    --dark: #0d0d0d;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #000, #141414);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding:
+      env(safe-area-inset-top)
+      env(safe-area-inset-right)
+      env(safe-area-inset-bottom)
+      env(safe-area-inset-left);
+    overflow: hidden;
+  }
+
+  .card {
+    background: var(--dark);
+    width: 92vw;
+    max-width: 420px;
+    min-height: 55vh;
+    max-height: 75vh;
+    padding: 24px 22px;
+    border-radius: 26px;
+    text-align: center;
+    box-shadow: 0 30px 60px rgba(255, 95, 162, 0.25);
+    border: 1px solid rgba(255,95,162,0.35);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 2;
+  }
+
+  .text {
+    color: var(--soft-pink);
+    font-size: clamp(1rem, 3.8vw, 1.2rem);
+    line-height: 1.5;
+    margin-bottom: 18px;
+    white-space: pre-line;
+    animation: fadeIn 0.6s ease;
+  }
+
+  input {
+    width: 100%;
+    padding: 14px;
+    padding-right: 48px; /* room for arrow button */
+    border-radius: 16px;
+    border: none;
+    background: #1a1a1a;
+    color: var(--soft-pink);
+    font-size: 1rem;
+    outline: none;
+    margin-top: 10px;
+  }
+
+  input::placeholder {
+    color: #777;
+  }
+
+  /* input action button (arrow) */
+  #inputBox { position: relative; }
+  .input-submit {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 18px;
+    border: 1px solid rgba(255,95,162,0.35);
+    background: linear-gradient(135deg, #ff4fa3, #ff87c8);
+    color: #000;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(255, 95, 162, 0.25);
+  }
+  .input-submit.disabled {
+    filter: grayscale(1);
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .btn-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    height: auto;
+  }
+
+  button {
+    padding: 12px 26px;
+    border-radius: 26px;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    margin: 6px;
+  }
+
+  #yesBtn {
+    background: linear-gradient(135deg, var(--pink), #ff87c8);
+    color: black;
+    font-weight: 600;
+  }
+
+  #noBtn {
+    background: #333;
+    color: #bbb;
+  }
+
+  .heart {
+    position: absolute;
+    bottom: -30px;
+    font-size: 18px;
+    opacity: 0.5;
+    animation: floatUp linear infinite;
+  }
+
+  .bounce {
+    font-size: 34px;
+    animation: bounce 1s infinite;
+  }
+
+  /* toast notice */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    background: rgba(20,20,20,0.92);
+    color: var(--soft-pink);
+    border: 1px solid rgba(255,95,162,0.35);
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 0.92rem;
+    box-shadow: 0 8px 24px rgba(255,95,162,0.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+    z-index: 10;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-4px);
+  }
+
+  @keyframes floatUp {
+    from { transform: translateY(0); }
+    to { transform: translateY(-120vh); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes bounce {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  /* iPhone 14 Pro Max fine-tuning */
+  @media (min-width: 420px) and (max-width: 440px) {
+    .card {
+      max-height: 70vh;
+    }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <div id="message" class="text">You are welcome Molinda 😊</div>
+
+  <div id="inputBox" style="display:none;">
+    <input id="happyInput" type="text" placeholder="Type your answer… 💭">
+    <button id="inputSubmit" class="input-submit" aria-label="Continue">→</button>
+  </div>
+
+  <div id="buttons" class="btn-row" style="display:none;">
+    <button id="yesBtn">Yes</button>
+    <button id="noBtn">No</button>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+const message = document.getElementById("message");
+const inputBox = document.getElementById("inputBox");
+const buttons = document.getElementById("buttons");
+const yesBtn = document.getElementById("yesBtn");
+const noBtn = document.getElementById("noBtn");
+const happyInput = document.getElementById("happyInput");
+const inputSubmit = document.getElementById("inputSubmit");
+const toast = document.getElementById("toast");
+
+let yesCount = 0;
+let progressedAfterInput = false;
+const RESPONSES_ENDPOINT = ""; // optional: set to a webhook URL to receive JSON
+
+// Floating hearts
+for (let i = 0; i < 20; i++) {
+  const heart = document.createElement("div");
+  heart.className = "heart";
+  heart.innerText = "💗";
+  heart.style.left = Math.random() * 100 + "vw";
+  heart.style.animationDuration = (5 + Math.random() * 5) + "s";
+  document.body.appendChild(heart);
+}
+
+// Scene flow
+setTimeout(() => typeText("But wait…"), 2000);
+setTimeout(() => typeText("That wasn’t the whole reason 😉"), 7000);
+
+setTimeout(() => {
+  message.innerHTML =
+    "<span class='bounce'>💗</span><br>" +
+    "I enjoy putting a smile on your face…<br>" +
+    "…it’s attractive ✨<br><br>" +
+    "Just like how you’re smiling right now 😊<br>" +
+    "omg… I wish I was seeing you 😌";
+}, 12000);
+
+setTimeout(() => {
+  message.innerText =
+    "Seeing you smile today?\nmade my day if possible I could do it a thousand times 😌";
+}, 22000);
+
+setTimeout(() => {
+  message.innerText =
+    "So tell me something Molinda…\nwhat really makes you happy?";
+  inputBox.style.display = "block";
+  happyInput.value = "";
+  inputSubmit.disabled = true;
+  inputSubmit.classList.add('disabled');
+  happyInput.focus();
+}, 28000);
+
+// Wait for her response before moving on (no auto-advance)
+
+// Typing effect
+function typeText(text) {
+  message.innerText = "";
+  let i = 0;
+  const interval = setInterval(() => {
+    message.innerText += text[i];
+    i++;
+    if (i >= text.length) clearInterval(interval);
+  }, 55);
+}
+
+// YES logic
+yesBtn.addEventListener("click", () => {
+  yesCount++;
+  if (yesCount === 1) {
+    message.innerText = "Hmmm… you sure? 🤔";
+  } else if (yesCount === 2) {
+    message.innerText = "Really really? 😏";
+  } else {
+    message.innerText = "Story for another day 😉";
+    buttons.style.display = "none";
+    setTimeout(() => {
+      message.innerText = "Goodbye 👋✨";
+    }, 2000);
+  }
+});
+
+// NO button stays still
+// (no moveNoButton function or event listeners)
+
+// Proceed to next scene from input arrow or timeout
+function proceedAfterInput() {
+  if (progressedAfterInput) return;
+  if (!happyInput.value.trim()) {
+    happyInput.focus();
+    return;
+  }
+  const answer = happyInput.value.trim();
+  saveLocalResponse(answer);
+  postToEndpoint(answer);
+  progressedAfterInput = true;
+  message.innerText =
+    "Ohh by the way… 👀\nDo you wanna know what made me make you feel like i labelled you as a 'gevha'?";
+  inputBox.style.display = "none";
+  buttons.style.display = "block";
+}
+
+// Hook up arrow button and Enter key
+inputSubmit.addEventListener('click', () => {
+  proceedAfterInput();
+});
+happyInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    proceedAfterInput();
+  }
+});
+
+// Enable/disable the arrow based on input content
+happyInput.addEventListener('input', () => {
+  const has = happyInput.value.trim().length > 0;
+  inputSubmit.disabled = !has;
+  inputSubmit.classList.toggle('disabled', !has);
+});
+
+// Save to localStorage for dashboard.html
+function saveLocalResponse(answer) {
+  try {
+    const key = 'responses';
+    const list = JSON.parse(localStorage.getItem(key) || '[]');
+    list.push({ answer, timestamp: new Date().toISOString(), ua: navigator.userAgent });
+    localStorage.setItem(key, JSON.stringify(list));
+    showToast('Saved your answer');
+  } catch (_) {}
+}
+
+// Optionally POST to a webhook endpoint (Formspree, Apps Script, Supabase Edge)
+async function postToEndpoint(answer) {
+  if (!RESPONSES_ENDPOINT) return;
+  try {
+    await fetch(RESPONSES_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        answer,
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent
+      })
+    });
+    showToast('Sent to dashboard');
+  } catch (e) {
+    showToast('Could not reach dashboard');
+  }
+}
+
+function showToast(text) {
+  if (!toast) return;
+  toast.textContent = text;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+</script>
+
+</body>
+</html>
